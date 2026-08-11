@@ -1,0 +1,6 @@
+{
+  "name": "ProConnect - Professional Network & Flutter App Suite",
+  "description": "Full-stack LinkedIn clone with AI assistance, feed, jobs board, real-time messaging, networking, profile management, and complete exportable Flutter codebase for Android APK & iOS build.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
