@@ -15,6 +15,8 @@ import { MessagingView } from "./components/MessagingView";
 import { NotificationsView } from "./components/NotificationsView";
 import { ProfileView } from "./components/ProfileView";
 import { CompanyView } from "./components/CompanyView";
+import { AdminView } from "./components/AdminView";
+import { SettingsView } from "./components/SettingsView";
 import { CreatePostModal } from "./components/CreatePostModal";
 import { FlutterSuiteModal } from "./components/FlutterSuiteModal";
 import { KeycloakAuditModal } from "./components/KeycloakAuditModal";
@@ -24,30 +26,33 @@ import { getProfileForUser, saveProfileForUser } from "./utils/userProfiles";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>("feed");
-  const [keycloakSession, setKeycloakSession] = useState<KeycloakSession>({
-    isAuthenticated: true,
-    username: "alex.morgan",
-    email: "alex.morgan@proconnect.io",
-    roles: ["realm-admin", "proconnect-user", "keycloak-audit-reader"],
-    loginTime: new Date().toISOString(),
-    accessToken:
-      "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJrYy1zdWItYWxleC1tb3JnYW4iLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJhbGV4Lm1vcmdhbiIsImVtYWlsIjoiYWxleC5tb3JnYW5AcHJvY29ubmVjdC5pbyIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJyZWFsbS1hZG1pbiIsInByb2Nvbm5lY3QtdXNlciJdfSwiaXNzIjoiaHR0cHM6Ly9rZXljbG9hay5wcm9jb25uZWN0LmludGVybmFsL2F1dGgvcmVhbG1zL3Byb2Nvbm5lY3QtcmVhbG0iLCJleHAiOjE5MjI2NTYwMDB9.kc_sig_mock",
-    tokenPayload: {
-      sub: "kc-sub-alex-morgan-8842",
-      preferred_username: "alex.morgan",
-      email: "alex.morgan@proconnect.io",
-      given_name: "Alex",
-      family_name: "Morgan",
-      realm_access: {
-        roles: ["realm-admin", "proconnect-user", "keycloak-audit-reader"],
-      },
-      exp: 1922656000,
-      iat: Math.floor(Date.now() / 1000),
-      iss: "https://keycloak.proconnect.internal/auth/realms/proconnect-realm",
-    },
+  const [keycloakSession, setKeycloakSession] = useState<KeycloakSession>(() => {
+    try {
+      const saved =
+        sessionStorage.getItem("proconnect_session") ||
+        localStorage.getItem("proconnect_session");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.isAuthenticated) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn("Error loading stored session:", e);
+    }
+    return {
+      isAuthenticated: false,
+      username: "",
+      email: "",
+      roles: [],
+      accessToken: "",
+    };
   });
 
   const [user, setUser] = useState<User>(() => {
+    if (keycloakSession.isAuthenticated && keycloakSession.username) {
+      return getProfileForUser(keycloakSession.username, keycloakSession.tokenPayload);
+    }
     return getProfileForUser("alex.morgan");
   });
 
@@ -428,9 +433,12 @@ export default function App() {
       console.warn("Keycloak logout error:", e);
     }
 
+    sessionStorage.removeItem("proconnect_session");
+    localStorage.removeItem("proconnect_session");
+
     setKeycloakSession({
       isAuthenticated: false,
-      username: "Logged Out",
+      username: "",
       email: "",
       roles: [],
       accessToken: "",
@@ -539,6 +547,25 @@ export default function App() {
         )}
 
         {activeTab === "company" && <CompanyView />}
+
+        {activeTab === "admin" && (
+          <AdminView
+            keycloakSession={keycloakSession}
+            setKeycloakSession={setKeycloakSession}
+          />
+        )}
+
+        {activeTab === "settings" && (
+          <SettingsView
+            currentUser={user}
+            darkMode={darkMode}
+            setDarkMode={setDarkMode}
+            onSignOut={handleSignOut}
+            openFlutterSuite={() => setIsFlutterSuiteOpen(true)}
+            openKeycloakModal={() => setIsKeycloakModalOpen(true)}
+            setActiveTabApp={setActiveTab}
+          />
+        )}
       </div>
 
       {/* Create Post Modal */}

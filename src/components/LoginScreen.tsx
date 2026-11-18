@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   LogIn,
   UserPlus,
@@ -19,6 +19,8 @@ import {
   Inbox,
   Shield,
   Smartphone,
+  Trash2,
+  Save,
 } from "lucide-react";
 import { KeycloakSession } from "../types";
 
@@ -37,11 +39,41 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
   // Sign In State
   const [loginRealm, setLoginRealm] = useState("proconnect-realm");
-  const [loginUsername, setLoginUsername] = useState("alex.morgan");
-  const [loginPassword, setLoginPassword] = useState("password123");
+  const [loginUsername, setLoginUsername] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [savePassword, setSavePassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [hasSavedCreds, setHasSavedCreds] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+
+  // Check saved credentials on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("proconnect_saved_credentials");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.username) setLoginUsername(parsed.username);
+        if (parsed.password) setLoginPassword(parsed.password);
+        if (parsed.savePassword !== undefined) setSavePassword(parsed.savePassword);
+        if (parsed.rememberMe !== undefined) setRememberMe(parsed.rememberMe);
+        setHasSavedCreds(true);
+      }
+    } catch (e) {
+      console.warn("Error reading saved credentials:", e);
+    }
+  }, []);
+
+  const handleClearSavedCredentials = () => {
+    localStorage.removeItem("proconnect_saved_credentials");
+    localStorage.removeItem("proconnect_session");
+    setHasSavedCreds(false);
+    setLoginUsername("");
+    setLoginPassword("");
+    setSavePassword(false);
+    setRememberMe(false);
+  };
 
   // Sign Up State & 2FA
   const [signupStep, setSignupStep] = useState<"form" | "otp_verify">("form");
@@ -96,6 +128,28 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       }
 
       if (data.session) {
+        // Manage saved credentials & session persistence
+        if (savePassword || rememberMe) {
+          localStorage.setItem(
+            "proconnect_saved_credentials",
+            JSON.stringify({
+              username: loginUsername,
+              password: savePassword ? loginPassword : "",
+              savePassword,
+              rememberMe,
+            })
+          );
+        } else {
+          localStorage.removeItem("proconnect_saved_credentials");
+        }
+
+        if (rememberMe) {
+          localStorage.setItem("proconnect_session", JSON.stringify(data.session));
+        } else {
+          localStorage.removeItem("proconnect_session");
+        }
+
+        sessionStorage.setItem("proconnect_session", JSON.stringify(data.session));
         setKeycloakSession(data.session);
       }
     } catch (err: any) {
@@ -180,6 +234,21 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
       setSignupSuccess("2FA Verified! Account created successfully.");
       if (data.session) {
+        sessionStorage.setItem("proconnect_session", JSON.stringify(data.session));
+        if (rememberMe || savePassword) {
+          localStorage.setItem(
+            "proconnect_saved_credentials",
+            JSON.stringify({
+              username: signupUsername,
+              password: savePassword ? signupPassword : "",
+              savePassword,
+              rememberMe,
+            })
+          );
+          if (rememberMe) {
+            localStorage.setItem("proconnect_session", JSON.stringify(data.session));
+          }
+        }
         setTimeout(() => {
           setKeycloakSession(data.session);
         }, 1200);
@@ -292,14 +361,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={openKeycloakAuditModal}
-            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors border border-slate-300 dark:border-slate-700"
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-            <span>Keycloak Audit Logs</span>
-          </button>
-
           <button
             onClick={() => setAuthMode("signup")}
             className={`px-4 py-1.5 text-xs font-bold rounded-full transition-colors ${
@@ -478,6 +539,48 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                </div>
+
+                {/* Saved Credentials Indicator */}
+                {hasSavedCreds && (
+                  <div className="p-2.5 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-1.5 text-blue-700 dark:text-blue-300 font-semibold text-[11px]">
+                      <Save className="w-3.5 h-3.5 text-[#0A66C2] shrink-0" />
+                      <span>Saved login credentials loaded</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleClearSavedCredentials}
+                      className="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors flex items-center gap-1 text-[10px] font-bold"
+                      title="Clear saved credentials"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Clear</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Save Password & Remember Me Checkboxes */}
+                <div className="space-y-2 pt-1">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300 select-none">
+                    <input
+                      type="checkbox"
+                      checked={savePassword}
+                      onChange={(e) => setSavePassword(e.target.checked)}
+                      className="w-4 h-4 rounded-xs border-slate-300 text-[#0A66C2] focus:ring-[#0A66C2]"
+                    />
+                    <span>Save password for 1-click sign in</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-300 select-none">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-4 h-4 rounded-xs border-slate-300 text-[#0A66C2] focus:ring-[#0A66C2]"
+                    />
+                    <span>Keep me signed in on this device</span>
+                  </label>
                 </div>
 
                 <div className="pt-2">
@@ -986,12 +1089,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           <a href="#guidelines" onClick={(e) => e.preventDefault()} className="hover:underline">
             Community Guidelines
           </a>
-          <button
-            onClick={openKeycloakAuditModal}
-            className="hover:underline text-cyan-600 dark:text-cyan-400 font-bold"
-          >
-            Audit Logs Panel
-          </button>
         </div>
       </footer>
     </div>

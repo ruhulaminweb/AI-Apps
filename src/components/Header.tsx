@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   KeyRound,
   LogOut,
+  Settings,
 } from "lucide-react";
 import { User, NotificationItem } from "../types";
 
@@ -62,6 +63,7 @@ export const Header: React.FC<HeaderProps> = ({
     { id: "jobs", label: "Jobs", icon: Briefcase },
     { id: "messaging", label: "Messaging", icon: MessageSquare, badge: unreadMessageCount },
     { id: "notifications", label: "Notifications", icon: Bell, badge: unreadNotifCount },
+    { id: "settings", label: "Settings", icon: Settings },
   ];
 
   return (
@@ -129,38 +131,6 @@ export const Header: React.FC<HeaderProps> = ({
             );
           })}
 
-          {/* Keycloak Auth & Audit CTA */}
-          <button
-            id="keycloak-audit-btn"
-            onClick={openKeycloakModal}
-            className={`flex items-center gap-1.5 py-1 px-2.5 rounded-lg border text-xs font-semibold shadow-xs transition-all transform active:scale-95 ${
-              keycloakAuthenticated
-                ? "bg-cyan-900/10 dark:bg-cyan-950/40 border-cyan-500/40 text-cyan-600 dark:text-cyan-300 hover:bg-cyan-50 dark:hover:bg-cyan-900/40"
-                : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
-            }`}
-            title="Keycloak Identity & Audit Log Engine"
-          >
-            <ShieldCheck className={`w-4 h-4 ${keycloakAuthenticated ? "text-cyan-500 animate-pulse" : "text-slate-500"}`} />
-            <span className="hidden lg:inline font-bold">Keycloak Auth</span>
-            <span className="text-[10px] bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-mono px-1 rounded-xs hidden sm:inline">
-              OIDC
-            </span>
-          </button>
-
-          {/* Flutter Mobile APK / iOS Suite CTA */}
-          <button
-            id="flutter-suite-btn"
-            onClick={openFlutterSuite}
-            className="flex flex-col items-center justify-center py-1 px-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 shadow-xs transition-all transform active:scale-95 text-xs font-semibold"
-            title="Flutter App Source Code & Android APK Builder"
-          >
-            <div className="flex items-center gap-1">
-              <Smartphone className="w-4 h-4 text-cyan-200 animate-pulse" />
-              <span className="font-bold text-[11px] hidden lg:inline">Flutter APK/iOS</span>
-            </div>
-            <span className="text-[9px] opacity-90 hidden lg:inline">Unified Codebase</span>
-          </button>
-
           {/* Quick Create Post button */}
           <button
             id="header-create-post-btn"
@@ -169,16 +139,6 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <PlusSquare className="w-4 h-4" />
             <span>Post</span>
-          </button>
-
-          {/* Dark / Light Toggle */}
-          <button
-            id="theme-toggle-btn"
-            onClick={() => setDarkMode(!darkMode)}
-            className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
-            title="Toggle theme"
-          >
-            {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
           </button>
 
           {/* Profile Menu Dropdown */}
@@ -233,18 +193,37 @@ export const Header: React.FC<HeaderProps> = ({
                       Account & Access
                     </div>
                     <button
+                      onClick={() => setActiveTab("admin")}
+                      className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md text-cyan-600 dark:text-cyan-400 font-medium"
+                    >
+                      <ShieldCheck className="w-4 h-4 text-cyan-500" />
+                      <span>Administrative Console</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("settings")}
+                      className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md font-medium"
+                    >
+                      <Settings className="w-4 h-4 text-slate-400" />
+                      <span>Settings & Preferences</span>
+                    </button>
+                    <button
+                      onClick={() => setDarkMode(!darkMode)}
+                      className="w-full text-left px-3 py-1.5 flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md font-medium text-amber-600 dark:text-amber-400"
+                    >
+                      <div className="flex items-center gap-2">
+                        {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
+                        <span>Toggle Theme</span>
+                      </div>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                        {darkMode ? "Dark" : "Light"}
+                      </span>
+                    </button>
+                    <button
                       onClick={() => setActiveTab("company")}
                       className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md"
                     >
                       <Building2 className="w-4 h-4 text-slate-400" />
                       <span>Company Pages</span>
-                    </button>
-                    <button
-                      onClick={openKeycloakModal}
-                      className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md text-cyan-600 dark:text-cyan-400 font-medium"
-                    >
-                      <ShieldCheck className="w-4 h-4 text-cyan-500" />
-                      <span>Keycloak SSO & Audit Logs</span>
                     </button>
                     <button
                       onClick={openFlutterSuite}

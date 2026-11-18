@@ -1,5 +1,79 @@
 export type ReactionType = "like" | "celebrate" | "support" | "love" | "insightful" | "funny";
 
+export interface ContactInfo {
+  email?: string;
+  phone?: string;
+  website?: string;
+  github?: string;
+  twitter?: string;
+  linkedinUrl?: string;
+}
+
+export interface Certification {
+  id: string;
+  name: string;
+  issuingOrganization: string;
+  issueDate: string;
+  expirationDate?: string;
+  credentialId?: string;
+  credentialUrl?: string;
+  logo?: string;
+}
+
+export interface ProjectItem {
+  id: string;
+  title: string;
+  role?: string;
+  startDate: string;
+  endDate?: string;
+  description: string;
+  url?: string;
+  skillsUsed?: string[];
+}
+
+export interface FamilyMember {
+  id: string;
+  name: string;
+  relationship: string; // e.g. "Spouse & Co-founder", "Sister & Tech Entrepreneur", "Mentor & Advisor"
+  headline: string;
+  avatar: string;
+  location?: string;
+}
+
+export interface LanguageItem {
+  id: string;
+  language: string;
+  proficiency: "Native or bilingual" | "Full professional" | "Professional working" | "Elementary" | "Limited working";
+}
+
+export interface VolunteerExperience {
+  id: string;
+  organization: string;
+  role: string;
+  cause: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+}
+
+export interface HonorAward {
+  id: string;
+  title: string;
+  issuer: string;
+  issueDate: string;
+  description: string;
+}
+
+export interface FeaturedItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  imageUrl?: string;
+  linkUrl?: string;
+  type: "post" | "article" | "link" | "media";
+}
+
 export interface User {
   id: string;
   name: string;
@@ -15,10 +89,19 @@ export interface User {
   isHiring: boolean;
   company?: string;
   role?: string;
+  contactInfo?: ContactInfo;
   experiences: Experience[];
   education: Education[];
   skills: Skill[];
   recommendations: Recommendation[];
+  certifications?: Certification[];
+  projects?: ProjectItem[];
+  familyConnections?: FamilyMember[];
+  languages?: LanguageItem[];
+  socialCauses?: string[];
+  volunteerWork?: VolunteerExperience[];
+  honorsAndAwards?: HonorAward[];
+  featuredItems?: FeaturedItem[];
 }
 
 export interface Experience {
@@ -27,10 +110,12 @@ export interface Experience {
   company: string;
   companyLogo?: string;
   location: string;
+  employmentType?: string;
   startDate: string;
   endDate: string;
   isCurrent: boolean;
   description: string;
+  skillsUsed?: string[];
 }
 
 export interface Education {
@@ -40,6 +125,9 @@ export interface Education {
   fieldOfStudy: string;
   startDate: string;
   endDate: string;
+  gpa?: string;
+  activities?: string;
+  honors?: string;
 }
 
 export interface Skill {
